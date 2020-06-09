@@ -1,0 +1,16 @@
+Start process in another cmd!
+
+RabbitMQ server:
+
+brew services start rabbitmq     //start
+brew services stop  rabbitmq     //stop
+brew services restart rabbitmq   //restart
+
+
+Сelery:
+celery worker -A start.celery --loglevel=info
+
+Flower:
+celery flower
+
+Open browser http://localhost:5555/
