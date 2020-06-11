@@ -46,11 +46,22 @@ def when_will_result(text):
     condition = True
     while condition:
         for val in range(101):
-            time.sleep(0.1)
+            time.sleep(0.05)
             socketio.emit('progress_update', {'ratio': val})
         condition = False
+
+    socketio.emit('progress_update', {'data_text': exampleresult()})
     return('when_will_result() -> ok; update_complete;')
 
+
+def exampleresult():
+    # JSON format for reading JS on the client
+    preproc = []
+    for i in range(5):
+        preproc.append({"fieldtext": "{this_text}"
+                       .format(this_text='Глокая куздра штеко будланула бокра и курдячит бокрёнка ' + str(i))
+                        })
+    return preproc
 
 if __name__ == '__main__':
     socketio.run(app)

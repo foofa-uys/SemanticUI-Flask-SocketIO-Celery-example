@@ -10,7 +10,105 @@
 
     <script src="//cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.js" integrity="sha256-yr4fRk/GU1ehYJPAs8P4JlTgu0Hdsp4ZKrx8bDEDC3I=" crossorigin="anonymous"></script>
     <script type="text/javascript" charset="utf-8">
+    var dynamicTable = (function() {
+
+    var _tableId, _table,
+        _fields, _headers,
+        _defaultText;
+
+    /** Builds the row with columns from the specified names.
+     *  If the item parameter is specified, the memebers of the names array will be used as property names of the item; otherwise they will be directly parsed as text.
+     */
+
+        function _buildRowColumnsHeader(names, item=undefined, type='td') {
+        var row = '<tr>';
+        if (names && names.length > 0)
+        {
+            $.each(names, function(index, name) {
+                var c = item ? item[name+''] : name;
+                row += (type === 'td') ? '<td>' + c + '</td>':
+                '<th>' + c + '</th>';
+            });
+        }
+        row += '</tr>';
+        return row;
+    }
+
+    /** Builds and sets the headers of the table. */
+    function _setHeaders() {
+        // if no headers specified, we will use the fields as headers.
+        _headers = (_headers == null || _headers.length < 1) ? _fields : _headers;
+        var h = _buildRowColumnsHeader(_headers, null, 'th');
+
+        if (_table.children('thead').length < 1) _table.prepend('<thead></thead>');
+        _table.children('thead').html(h);
+    }
+
+    function _setNoItemsInfo() {
+        if (_table.length < 1) return; //not configured.
+        var colspan = _headers != null && _headers.length > 0 ?
+            'colspan="' + _headers.length + '"' : '';
+
+        var semantic_ui_empty = '<tr><td><div class="ui fluid placeholder"><div class="paragraph"><div class="line"></div><div class="line"></div><div class="line"></div></div></div></td></tr>';
+
+        var content = '<tr class="ui celled table"><td ' + colspan + ' style="text-align:center">' +
+            _defaultText + '</td></tr>' + semantic_ui_empty;
+
+        if (_table.children('tbody').length > 0)
+            _table.children('tbody').html(content);
+        else _table.append('<tbody>' + content + '</tbody>');
+    }
+
+    function _removeNoItemsInfo() {
+        var c = _table.children('tbody').children('tr');
+        if (c.length == 1 && c.hasClass('ui celled table')) _table.children('tbody').empty();
+    }
+
+    return {
+        /** Configres the dynamic table. */
+        config: function(tableId, fields, headers, defaultText) {
+            _tableId = tableId;
+            _table = $('#' + tableId);
+            _fields = fields || null;
+            _headers = headers || null;
+            _defaultText = defaultText || 'No items to list...';
+            _setHeaders();
+            _setNoItemsInfo();
+            return this;
+        },
+        /** Loads the specified data to the table body. */
+        load: function(data, append) {
+            if (_table.length < 1) return; //not configured.
+            _setHeaders();
+            _removeNoItemsInfo();
+            if (data && data.length > 0) {
+                var rows = '';
+                $.each(data, function(index, item) {
+                    rows += _buildRowColumnsHeader(_fields, item);
+                });
+                var mthd = append ? 'append' : 'html';
+                _table.children('tbody')[mthd](rows);
+            }
+            else {
+                _setNoItemsInfo();
+            }
+            return this;
+        },
+        /** Clears the table body. */
+        clear: function() {
+            _setNoItemsInfo();
+            return this;
+        }
+    };
+    }());
+    <!--------------------------------------------------->
+
     $(document).ready(function(){
+    var dt = dynamicTable.config('data-table',
+                                 ['fieldtext'],
+                                 ['Текст'],
+                                 'Нет данных для отображения...');
+
         namespace = '/';
         var socket = io.connect('http://' + document.domain + ':' + location.port + namespace);
 
@@ -20,6 +118,7 @@
 
     socket.on('progress_update', function(res) {
         var value = res.ratio
+        var text_res = res.data_text
         $('#progress_main').progress({
           percent: value,
           label: 'ratio',
@@ -27,11 +126,15 @@
                   ratio: value + ' %'
                 }
         });
+
+        console.log(text_res);
+        dt.load(text_res);
+
     });
 
     $("#btn_start").click(function() {
           socket.emit('submit_result', {text: $('#emit_text').val()});
-          alert("Start emit");
+          console.log("Start emit");
         });
 
     // Vertical menu
@@ -108,55 +211,57 @@
                 </div>
 
 <!--                Result table-->
-                <table class="ui celled padded table">
-                  <thead>
-                    <th>Текст</th>
-                    <th>Качество</th>
 
-                  </tr></thead>
-                  <tbody>
-                    <tr>
-                      <td>Отправьте заявку на открытие расчетного счета . Мы перезвоним вам или составим договор и полюбуемся)</td>
+                <table id="data-table" class="ui celled padded table"></table>
+<!--                example static table-->
+<!--                  <thead>-->
+<!--                  <tr>-->
+<!--                    <th>Текст</th>-->
+<!--                    <th>Качество</th>-->
+<!--                  </tr></thead>-->
+<!--                  <tbody>-->
+<!--                    <tr>-->
+<!--                      <td>Отправьте заявку на открытие расчетного счета . Мы перезвоним вам или составим договор и полюбуемся)</td>-->
 
-                      <td>
-                        <div class="ui star rating" data-rating="3" data-max-rating="3"></div>
-                      </td>
-                    </tr>
+<!--                      <td>-->
+<!--                        <div class="ui star rating" data-rating="3" data-max-rating="3"></div>-->
+<!--                      </td>-->
+<!--                    </tr>-->
 
-                    <tr>
-                      <td>Карта сберегательная - Золотая карта Сбербанка россии. Банковская карточкатации рубля%. Бесплатный сыр только вокруг."</td>
+<!--                    <tr>-->
+<!--                      <td>Карта сберегательная - Золотая карта Сбербанка россии. Банковская карточкатации рубля%. Бесплатный сыр только вокруг."</td>-->
 
-                      <td>
-                        <div class="ui star rating" data-rating="1" data-max-rating="3"></div>
-                      </td>
-                    </tr>
+<!--                      <td>-->
+<!--                        <div class="ui star rating" data-rating="1" data-max-rating="3"></div>-->
+<!--                      </td>-->
+<!--                    </tr>-->
 
-                  <tr>
-                      <td>Откройте расчетный счет в Сбербанке и пользуйтесь расчетным счетом, пока не поздно.</td>
+<!--                  <tr>-->
+<!--                      <td>Откройте расчетный счет в Сбербанке и пользуйтесь расчетным счетом, пока не поздно.</td>-->
 
-                      <td>
-                        <div class="ui star rating" data-rating="2" data-max-rating="3"></div>
-                      </td>
-                  </tr>
+<!--                      <td>-->
+<!--                        <div class="ui star rating" data-rating="2" data-max-rating="3"></div>-->
+<!--                      </td>-->
+<!--                  </tr>-->
 
-                  </tbody>
-                  <tfoot>
-                    <tr><th colspan="5">
-                      <div class="ui right floated pagination menu">
-                        <a class="icon item">
-                          <i class="left chevron icon"></i>
-                        </a>
-                        <a class="item">1</a>
-                        <a class="item">2</a>
-                        <a class="item">3</a>
-                        <a class="item">4</a>
-                        <a class="icon item">
-                          <i class="right chevron icon"></i>
-                        </a>
-                      </div>
-                    </th>
-                  </tr></tfoot>
-                </table>
+<!--                  </tbody>-->
+<!--                  <tfoot>-->
+<!--                    <tr><th colspan="5">-->
+<!--                      <div class="ui right floated pagination menu">-->
+<!--                        <a class="icon item">-->
+<!--                          <i class="left chevron icon"></i>-->
+<!--                        </a>-->
+<!--                        <a class="item active">1</a>-->
+<!--                        <a class="item">2</a>-->
+<!--                        <a class="item">3</a>-->
+<!--                        <a class="item">4</a>-->
+<!--                        <a class="icon item">-->
+<!--                          <i class="right chevron icon"></i>-->
+<!--                        </a>-->
+<!--                      </div>-->
+<!--                    </th>-->
+<!--                  </tr></tfoot>-->
+<!--                </table>-->
 
             </div>
           </div>
