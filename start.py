@@ -33,15 +33,21 @@ def confirmation_message(message):
 
 @socketio.on('submit_result', namespace='/')
 def text_handler(message):
-	text = message['text']
-	when_will_result.delay(text)
+    l_text = message['l_text']
+    l_min_length = message['l_min_length']
+    l_max_length = message['l_max_length']
+    l_temperature = message['l_temperature']
+    l_top_p = message['l_top_p']
+    l_top_k = message['l_top_k']
+    l_repetition_penalty = message['l_repetition_penalty']
+    when_will_result.delay(l_text, l_min_length, l_max_length, l_temperature, l_top_p, l_top_k, l_repetition_penalty)
 
 
 # # using this method with the ajax request
 # @app.route('/task', methods=['GET', 'POST'])
 
 @celery.task(name="task.message")
-def when_will_result(text):
+def when_will_result(l_text, l_min_length, l_max_length, l_temperature, l_top_p, l_top_k, l_repetition_penalty):
     socketio = SocketIO(message_queue='amqp://')
     condition = True
     while condition:

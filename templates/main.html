@@ -133,7 +133,14 @@
     });
 
     $("#btn_start").click(function() {
-          socket.emit('submit_result', {text: $('#emit_text').val()});
+          socket.emit('submit_result', {l_text:               $('#emit_text').val(),
+                                        l_min_length:         $('#min_length').val(),
+                                        l_max_length:         $('#max_length').val(),
+                                        l_temperature:        $('#temperature').val(),
+                                        l_top_p:              $('#top_p').val(),
+                                        l_top_k:              $('#top_k').val(),
+                                        l_repetition_penalty: $('#repetition_penalty').val()
+                                        });
           console.log("Start emit");
         });
 
@@ -145,6 +152,71 @@
     $('.special.card .image').dimmer({on: 'hover'});
     $('.star.rating').rating();
     $('.card .dimmer').dimmer({on: 'hover'});
+
+    // Accordion
+    $('.ui.accordion').accordion();
+
+    $('.ui.form').form({
+        inline : true,
+        on: 'change',
+        fields: {
+          min_length: {
+            identifier  : 'min_length',
+            rules: [
+              {
+                type   : 'integer[50..300]',
+                prompt : 'Пожалуйста ведите число от 50 до 300'
+              }
+            ]
+          },
+          max_length: {
+            identifier  : 'max_length',
+            rules: [
+              {
+                type   : 'integer[50..300]',
+                prompt : 'Пожалуйста введите число от 50 до 300'
+              }
+            ]
+          },
+          temperature: {
+            identifier  : 'temperature',
+            rules: [
+              {
+                type   : 'decimal',
+                prompt : 'Please enter a valid decimal'
+              }
+            ]
+          },
+          top_p: {
+            identifier  : 'top_p',
+            rules: [
+              {
+                type   : 'decimal',
+                prompt : 'Please enter a valid decimal'
+              }
+            ]
+          },
+          top_k: {
+            identifier  : 'top_k',
+            rules: [
+              {
+                type   : 'decimal',
+                prompt : 'Please enter a valid decimal'
+              }
+            ]
+          },
+          repetition_penalty: {
+            identifier  : 'repetition_penalty',
+            rules: [
+              {
+                type   : 'decimal',
+                prompt : 'Please enter a valid decimal'
+              }
+            ]
+          }
+
+        }
+    });
 
     });
     </script>
@@ -176,6 +248,7 @@
 <div class="ui container">
     <div class="ui top attached demo menu">
       <a id = "toggle" class="item"><i class="sidebar icon"></i> Меню </a>
+
         </div>
         <div class="ui bottom attached segment pushable">
           <div class="ui inverted labeled icon left inline vertical sidebar menu" style="">
@@ -186,20 +259,64 @@
             <div class="ui basic segment">
 
                 <h2 class="ui header">
-                  <div class="content">Поиск <div class="sub header">Введите часть фразы </div>
+                  <div class="content">
+                      Поиск
+                      <div class="sub header">Введите часть фразы </div>
                   </div>
                 </h2>
 
                 <form id="emit" action="/task" method = 'POST'>
+
                  <div class="ui action left icon input">
                   <i class="search icon"></i>
                   <input type="text" id="emit_text" name="emit_text" placeholder="Ваш текст..." size="50">
 <!--                  <button type="button" onclick="when_will_result();" id="btn_start" class="ui teal button">Искать</button>-->
                   <button type="button" id="btn_start" class="ui teal button">Искать</button>
                  </div>
+
+                 <div class="ui accordion">
+                  <div class="title">
+                    <i class="cog icon"></i>
+                    Гипер-параметры
+                  </div>
+                   <div class="content">
+                       <div class="ui form error">
+                          <div class="three fields">
+                            <div class="field">
+                              <label>MIN length</label>
+                              <input id="min_length" name="min_length" type="text" value="50">
+                            </div>
+                            <div class="field">
+                              <label>Max length</label>
+                              <input id="max_length" name="max_length" type="text" value="150">
+                            </div>
+                            <div class="field">
+                              <label>Temperature</label>
+                              <input id="temperature" name="temperature" type="text" value="0.3">
+                            </div>
+                            <div class="field">
+                              <label>Top P</label>
+                              <input id="top_p" name="top_p" type="text" value="0.95">
+                            </div>
+                            <div class="field">
+                              <label>Top K</label>
+                              <input id="top_k" name="top_k" type="text" value="0">
+                            </div>
+                            <div class="field">
+                              <label>Repetition penalty</label>
+                              <input id="repetition_penalty" name="repetition_penalty" type="text" value="1.2">
+                            </div>
+                          </div>
+                        </div>
+                   </div>
+                 </div>
                 </form>
 
-                <h2 class="ui header">Результат <div class="sub header">Ожидайте пока процесс формирования текстов завершится</div>
+                <h2 class="ui header">
+                    <div class="content">
+                        Результат
+                        <div class="sub header">Ожидайте пока процесс формирования текстов завершится</div>
+                    </div>
                 </h2>
 
                 <div class="ui active progress" id="progress_main" data-value="0" data-total="100">
