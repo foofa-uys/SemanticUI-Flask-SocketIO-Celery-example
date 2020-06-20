@@ -109,8 +109,37 @@
                                  ['Текст'],
                                  'Нет данных для отображения...');
 
-        namespace = '/';
-        var socket = io.connect('http://' + document.domain + ':' + location.port + namespace);
+    <!-- Get element in table -->
+
+    if (window.addEventListener) {
+        window.addEventListener('load', run, false);
+    } else if (window.attachEvent) {
+        window.attachEvent('onload', run);
+    }
+
+    function run() {
+        var t = document.getElementById('data-table');
+        t.onclick = function (event) {
+            event = event || window.event; //IE8
+            var target = event.target || event.srcElement;
+            while (target && target.nodeName != 'TR') { // find TR
+                target = target.parentElement;
+            }
+            //if (!target) { return; } //tr should be always found
+            var cells = target.cells; //cell collection - https://developer.mozilla.org/en-US/docs/Web/API/HTMLTableRowElement
+            //var cells = target.getElementsByTagName('td'); //alternative
+            if (!cells.length || target.parentNode.nodeName == 'THEAD') {
+                return;
+            }
+            var f1 = document.getElementById('emit_text');
+            f1.value = cells[0].innerHTML;
+            //console.log(target.nodeName, event);
+        };
+    }
+
+
+    namespace = '/';
+    var socket = io.connect('http://' + document.domain + ':' + location.port + namespace);
 
     socket.on('connect', function(){
         socket.emit('connection', {connection_confirmation: 'you are connected to the socket!'});
@@ -164,7 +193,7 @@
             identifier  : 'min_length',
             rules: [
               {
-                type   : 'integer[50..300]',
+                type   : 'integer[20..300]',
                 prompt : 'Пожалуйста ведите число от 50 до 300'
               }
             ]
@@ -173,7 +202,7 @@
             identifier  : 'max_length',
             rules: [
               {
-                type   : 'integer[50..300]',
+                type   : 'integer[20..300]',
                 prompt : 'Пожалуйста введите число от 50 до 300'
               }
             ]
@@ -260,7 +289,7 @@
 
                 <h2 class="ui header">
                   <div class="content">
-                      Поиск
+                      Генерация
                       <div class="sub header">Введите часть фразы </div>
                   </div>
                 </h2>
@@ -268,10 +297,10 @@
                 <form id="emit" action="/task" method = 'POST'>
 
                  <div class="ui action left icon input">
-                  <i class="search icon"></i>
-                  <input type="text" id="emit_text" name="emit_text" placeholder="Ваш текст..." size="50">
+                  <i class="edit icon"></i>
+                  <input type="text" id="emit_text" name="emit_text" placeholder="Ваш текст..." size="70">
 <!--                  <button type="button" onclick="when_will_result();" id="btn_start" class="ui teal button">Искать</button>-->
-                  <button type="button" id="btn_start" class="ui teal button">Искать</button>
+                  <button type="button" id="btn_start" class="ui teal button">Начать</button>
                  </div>
 
                  <div class="ui accordion">
@@ -319,7 +348,7 @@
                     </div>
                 </h2>
 
-                <div class="ui active progress" id="progress_main" data-value="0" data-total="100">
+                <div class="ui small active progress" id="progress_main" data-value="0" data-total="100">
                   <div class="bar">
                     <div class="progress"></div>
                   </div>
